@@ -1125,25 +1125,26 @@ Eigen::Matrix<double, 15, 15> sqrt_info =
 residual = sqrt_info * residual; 
 \end{lstlisting}
 
-这里残差 \verb|residual| 乘以 \verb|sqrt_info|，是因为真正的优化项其实是 Mahalanobis 距离
+这里残差 \verb|residual| 乘以 \verb|sqrt_info|，是因为真正的优化项其实是 Mahalanobis 距离 或 马氏范数
 
 \begin{equation}
-d = \mathbf{r}^T \mathbf{P}^{-1} \mathbf{r}
+\|\mathbf{r}\|^2_{\boldsymbol{\Sigma}} = \mathbf{r}^T \boldsymbol{\Sigma}^{-1} \mathbf{r}
 \end{equation}
 
 Mahalanobis距离 其实相当于一个残差加权，协方差大的加权小，协方差小的加权大，着重优化那些比较确定的残差。  
 
-因为 ceres 只接受最小二乘优化，也就是 $\min e^T e$，所以把 $P^{-1}$ 做 LLT分解
+Ceres-Solver只接受最小二乘优化，即 $\min \|\mathbf{r}\|^2$，通过Cholesky分解，\textbf{将马氏范数转化为二范数}
 
 \begin{equation}
-\mathbf{L} \mathbf{L}^T = \mathbf{P}^{−1}
-\end{equation}
-
-则 
-
-\begin{equation}
-d = \mathbf{r}^T (\mathbf{L} \mathbf{L}^T) \mathbf{r} = 
+\|\mathbf{r}\|^2_{\boldsymbol{\Sigma}} 
+= 
+\mathbf{r}^T \boldsymbol{\Sigma}^{-1} \mathbf{r}
+=
+\mathbf{r}^T (\mathbf{L} \mathbf{L}^T) \mathbf{r}
+=
 (\mathbf{L}^T \mathbf{r})^T (\mathbf{L}^T \mathbf{r})
+=
+\|\mathbf{L}^T \mathbf{r}\|^2
 \end{equation}
 
 令 $\mathbf{r'} = (\mathbf{L}^T \mathbf{r})$ 作为新的优化误差，所以 
@@ -1588,24 +1589,25 @@ reduce = sqrt_info * reduce;
 
 \subsection{Temporal Calibration}
 
-根据 港科大沈老师PPT \cite{shen2018vinsslide}，可以知道：
+根据 港科大沈老师Slide \cite{shen2018vinsslide}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[scale=0.4]{images/time_synchronization.png}
+\caption{Time Synchronization}
+\label{fig:time_synchronization}
+\end{figure}
 
 \begin{enumerate}
 
+\item Timestamps and Time Synchronization，如图 \ref{fig:time_synchronization}
 
-\item Timestamps
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[scale=0.6]{images/timestamps.png}
-\end{figure}
-
-\item Time Synchronization
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[scale=0.6]{images/time_synchronization.png}
-\end{figure}
+\begin{itemize}
+  \item Timestamp: how the time for each sensor measurement is tagged
+  \item Best: timestamping is done at data capture
+  \item OK: fixed latency for time stamping
+  \item Bad: variable latency in time stamping
+\end{itemize}
 
 \item Temporal Calibration
 
