@@ -27,7 +27,7 @@
 
 \subsection{前端视觉处理}
 
-\begin{enumerate}
+\begin{itemize}
 
   \item Simple feature processing pipeline
   \item 自适应直方图均衡化（\verb|cv::CLAHE|）
@@ -35,17 +35,17 @@
   \item 提取图像Harris角点（\verb|cv::goodFeaturesToTrack|）
   \item KLT金字塔光流跟踪（\verb|cv::calcOpticalFlowPyrLK|）
   \item 连续帧跟踪
-  \item 本质矩阵(RANSAC)去除外点（\verb|rejectWithF|）
+  \item 基础矩阵(RANSAC)去除外点（\verb|rejectWithF|）
   \item 发布 \verb|feature_points(id_of_point, un_pts, cur_pts, pts_velocity)|
   \item Keyframe selection
   
-  \begin{enumerate}
+  \begin{itemize}
   \item Case 1: Rotation-compensated average feature parallax is larger than a threshold
   \item Case 2: Number of tracked features in the current frame is less than a threshold
   \item All frames are used for optimization, but non-keyframes are removed first
-  \end{enumerate}  
+  \end{itemize}  
   
-\end{enumerate}  
+\end{itemize}  
 
 \subsection{IMU 预积分}
 
@@ -56,12 +56,16 @@
 
 \subsubsection{IMU 测量方程}
 
-忽略地球旋转，IMU 测量方程为
+忽略地球自转，IMU测量方程为
 
 \begin{equation}
-\begin{aligned}
-\hat{a}_t &= a_t + {b_a}_t + R_w^t g^w + n_a \\
-\hat{\omega}_t &= \omega_t + {b_{\omega}}_t + n_{\omega}
+\begin{aligned} 
+\hat{\mathbf{a}}_{t} 
+&= 
+\mathbf{a}_{t}+\mathbf{b}_{a_{t}}+\mathbf{R}_{w}^{t} \mathbf{g}^{w}+\mathbf{n}_{a} \\ 
+\hat{\boldsymbol{\omega}}_{t} 
+&=
+\boldsymbol{\omega}_{t}+\mathbf{b}_{w_{t}}+\mathbf{n}_{w} 
 \end{aligned}
 \end{equation}
 
@@ -85,11 +89,14 @@
 其中，
 
 \begin{equation}
-\boldsymbol{\Omega}(\boldsymbol{\omega})=
+\boldsymbol{\Omega}(\boldsymbol{\omega}) =
+\left[\begin{array}{c}
+\boldsymbol{\omega} \\ 0
+\end{array}\right]_{R} = 
 \left[\begin{array}{cc}
 {-\lfloor\boldsymbol{\omega}\rfloor_{ \times}} & {\boldsymbol{\omega}} \\ 
 {-\boldsymbol{\omega}^{T}} & {0}
-\end{array}\right],
+\end{array}\right], \quad
 \lfloor\boldsymbol{\omega}\rfloor_{ \times}=
 \left[\begin{array}{ccc}
 {0} & {-\omega_{z}} & {\omega_{y}} \\ 
@@ -114,7 +121,7 @@
 \mathbf{R}_{w}^{b_{k}} \mathbf{v}_{b_{k+1}}^{w} &=
 \mathbf{R}_{w}^{b_{k}}\left(\mathbf{v}_{b_{k}}^{w}-\mathbf{g}^{w} \Delta t_{k}\right)+\boldsymbol{\beta}_{b_{k+1}}^{b_{k}} \\ 
 \mathbf{q}_{w}^{b_{k}} \otimes \mathbf{q}_{b_{k+1}}^{w} &=
-\gamma_{b_{k+1}}^{b_{k}} 
+\boldsymbol{\gamma}_{b_{k+1}}^{b_{k}} 
 \end{aligned}
 \end{equation}
 
@@ -145,15 +152,15 @@
 \label{equ:preinte_measure}
 \begin{cases}
 \begin{aligned}
-\color{blue}{\delta q_{i+1}} &= 
-\delta q_{i} \otimes 
-\begin{bmatrix} 1 \\ \frac{1}{2} w_{i}' \delta t \end{bmatrix} \\
-\color{blue}{\delta\alpha_{i+1}} &= 
-\delta\alpha_{i} + \delta\beta_{i}t + \frac{1}{2}a_{i}'\delta t^{2} \\
-\color{blue}{\delta\beta_{i+1}} &= 
-\delta\beta_{i}+a_{i}' \delta t \\
-{b_a}_{i+1} &= {b_a}_i + n_{ba} \delta t \\
-{b_g}_{i+1} &= {b_g}_i + n_{bg} \delta t
+\color{blue}{\delta \mathbf{q}_{i+1}} &= 
+\delta \mathbf{q}_{i} \otimes 
+\begin{bmatrix} 1 \\ \frac{1}{2} \boldsymbol{\omega}_{i}^{\prime} \delta t \end{bmatrix} \\
+\color{blue}{\delta \boldsymbol{\alpha}_{i+1}} &= 
+\delta \boldsymbol{\alpha}_{i} + \delta \boldsymbol{\beta}_{i}t + \frac{1}{2} \mathbf{a}_{i}^{\prime} \delta t^{2} \\
+\color{blue}{\delta \boldsymbol{\beta}_{i+1}} &= 
+\delta \boldsymbol{\beta}_{i}+\mathbf{a}_{i}^{\prime} \delta t \\
+{\mathbf{b}_a}_{i+1} &= {\mathbf{b}_a}_i + \mathbf{n}_{ba} \delta t \\
+{\mathbf{b}_g}_{i+1} &= {\mathbf{b}_g}_i + \mathbf{n}_{bg} \delta t
 \end{aligned}
 \end{cases}
 \end{equation}
@@ -162,11 +169,15 @@
 
 \begin{equation}
 \begin{aligned}
-w_{i}' &= \frac{(w_i-{b_g}_i+{n_w}_0)+(w_{i+1}-{b_g}_i+{n_w}_1)}{2} \\
-       &= \frac{w_{i+1}+w_{i}+{n_w}_0+{n_w}_1}{2}-{b_g}_i \\
-a_{i}' &= \frac{
-  \delta q_{i} (a_{i}-{b_a}_i+{n_a}_0)+
-  {\color{blue}{\delta q_{i+1}}}(a_{i+1}-{b_a}_i+{n_a}_1)}{2}
+\boldsymbol{\omega}_{i}' 
+&= 
+\frac{(\boldsymbol{\omega}_i-{\mathbf{b}_g}_i+{\mathbf{n}_w}_0)+(\boldsymbol{\omega}_{i+1}-{\mathbf{b}_g}_i+{\mathbf{n}_w}_1)}{2} \\
+&= 
+\frac{\boldsymbol{\omega}_{i+1}+\boldsymbol{\omega}_{i}+{\mathbf{n}_w}_0+{\mathbf{n}_w}_1}{2}-{\mathbf{b}_g}_i \\
+\mathbf{a}_{i}' 
+&= 
+\frac{\delta \mathbf{q}_{i} (\mathbf{a}_{i}-{\mathbf{b}_a}_i+{\mathbf{n}_a}_0)+
+{\color{blue}{\delta \mathbf{q}_{i+1}}}(\mathbf{a}_{i+1}-{\mathbf{b}_a}_i+{\mathbf{n}_a}_1)}{2}
 \end{aligned}
 \end{equation}
 
@@ -191,12 +202,16 @@ result_linearized_bg = linearized_bg;
 
 \subsubsection{误差状态方程}
 
-IMU误差状态向量  
+IMU（预积分）误差状态向量  
 
 \begin{equation}
-\delta X =
-[\delta P \quad \delta \theta \quad \delta v
- \quad \delta b_a \quad \delta b_g]^T
+\delta \mathcal{X} =
+[
+\delta \mathbf{P} \quad 
+\delta \boldsymbol{\theta} \quad 
+\delta \mathbf{v} \quad 
+\delta \mathbf{b}_a \quad 
+\delta \mathbf{b}_g]^T
 \in \mathbb{R}^{15 \times 1}
 \end{equation}
 
@@ -236,7 +251,7 @@ IMU误差状态向量
 则\textbf{IMU预积分（误差）状态方程}为
 
 \begin{equation}
-\dot{\delta X_k} = F \delta X_k + Gn
+\dot{\delta \mathbf{X}_k} = \mathbf{F} \delta \mathbf{X}_k + \mathbf{G} \mathbf{n}
 \end{equation}
 
 则 IMU预积分状态传递方程 为
@@ -265,7 +280,8 @@ G' &= G \delta t     &\in \mathbb{R}^{15 \times 18}
 
 \begin{equation}
 \label{equ:preinte_iter_simple}
-\delta X_{k+1} = F' \delta X_k + G'n
+\delta \mathbf{X}_{k+1} 
+= \mathbf{F}^{\prime} \delta \mathbf{X}_k + \mathbf{G}^{\prime} \mathbf{n}
 \end{equation}
 
 式\eqref{equ:preinte_iter_simple} 展开得
@@ -400,6 +416,19 @@ F' P_t^{b_k} F'^T + G' Q {G'}^T \\
 \in \mathbb{R}^{18 \times 18}
 \end{equation}
 
+\begin{lstlisting}
+ACC_N = fsSettings["acc_n"];  ACC_W = fsSettings["acc_w"];
+GYR_N = fsSettings["gyr_n"];  GYR_W = fsSettings["gyr_w"];
+
+noise = Eigen::Matrix<double, 18, 18>::Zero();
+noise.block<3, 3>(0, 0)   =  (ACC_N * ACC_N) * Eigen::Matrix3d::Identity();
+noise.block<3, 3>(3, 3)   =  (GYR_N * GYR_N) * Eigen::Matrix3d::Identity();
+noise.block<3, 3>(6, 6)   =  (ACC_N * ACC_N) * Eigen::Matrix3d::Identity();
+noise.block<3, 3>(9, 9)   =  (GYR_N * GYR_N) * Eigen::Matrix3d::Identity();
+noise.block<3, 3>(12, 12) =  (ACC_W * ACC_W) * Eigen::Matrix3d::Identity();
+noise.block<3, 3>(15, 15) =  (GYR_W * GYR_W) * Eigen::Matrix3d::Identity();
+\end{lstlisting}
+
 当bias估计轻微改变时，我们可以使用如下的一阶近似 \textbf{对中值积分得到的预积分测量值进行矫正}，而\textbf{不重传播}，从而得到 \textbf{更加精确的预积分测量值}（bias修正的线性模型）
 
 \begin{equation}
@@ -458,53 +487,64 @@ Eigen::Matrix3d dv_dbg = jacobian.block<3, 3>(O_V, O_BG);
 \end{figure}
 
 
-\section{初始化(松耦合)}
+\section{系统初始化（松耦合）}
 
 在提取的图像的Features和做完IMU的预积分之后，进入了系统的初始化环节，主要的目的有以下两个：      
 
-\begin{enumerate}
+\begin{itemize}
 \item 系统使用单目相机，如果没有一个良好的尺度估计，就无法对两个传感器做进一步的融合，这个时候需要恢复出尺度；
 \item 要对IMU进行初始化，IMU会受到bias的影响，所以要得到IMU的bias。
-\end{enumerate}
+\end{itemize}
 
-所以我们要从初始化中恢复出尺度、重力、速度以及IMU的bias，因为视觉(SFM)在初始化的过程中有着较好的表现，所以在初始化的过程中主要以SFM为主，然后将IMU的预积分结果与其对齐，即可得到较好的初始化结果。
+所以我们要从初始化中恢复出尺度、重力、速度以及IMU的bias，因为视觉(SFM)在初始化的过程中有着较好的表现，所以在初始化的过程中\textbf{主要以SFM为主}，然后将IMU的预积分结果与其对齐，即可得到较好的初始化结果。
 
-\subsection{相机与IMU之间的相对旋转}
+\begin{itemize}
+\item 根据 旋转$R$约束，估计 $\mathbf{R}_{cb}$ 和 陀螺仪Bias（加速度Bias可忽略）
+\item 根据 位置$t$约束，估计 重力加速度$\mathbf{g}$ 和 尺度$s$
+\item noise没法估计
+\item 运动初始化
+\end{itemize}
+
+\subsection{相机与IMU之间的相对旋转（手眼标定）}
 
 相机与IMU之间的旋转标定非常重要，\textbf{偏差1-2°系统的精度就会变的极低}\cite{xiaobuyi2018webnote}。
 
-设相机利用对极关系得到的旋转矩阵为 $R_{c_{k+1}}^{c_k}$ ，IMU经过预积分得到的旋转矩阵为 $R_{b_{k+1}}^{b_{k}}$，相机与IMU之间的相对旋转为 $R_{c}^{b}$，则对于任一帧满足，
+设相机利用对极关系得到的旋转矩阵为 $\mathbf{R}_{c_{k+1}}^{c_k}$ ，IMU经过预积分得到的旋转矩阵为 $\mathbf{R}_{b_{k+1}}^{b_{k}}$，相机与IMU之间的相对旋转为 $\mathbf{R}_{c}^{b}$，则对于任一帧满足，
 
 \begin{equation}
-R^{b_{k}}_{b_{k+1}}R^{b}_{c}=R^{b}_{c}R^{c_{k}}_{c_{k+1}}
+\mathbf{R}^{b_{k}}_{b_{k+1}} \mathbf{R}^{b}_{c}
+= \mathbf{R}^{b}_{c} \mathbf{R}^{c_{k}}_{c_{k+1}}
 \end{equation}
 
-将旋转矩阵写为四元数，则上式可以写为
+将旋转矩阵写为四元数的形式
 
 \begin{equation}
-q^{b_{k}}_{b_{k+1}} \otimes q^{b}_{c}=q^{b}_{c}\otimes q^{c_{k}}_{c_{k+1}}
+\mathbf{q}^{b_{k}}_{b_{k+1}} \otimes \mathbf{q}^{b}_{c}
+= \mathbf{q}^{b}_{c} \otimes \mathbf{q}^{c_{k}}_{c_{k+1}}
 \end{equation}
 
-将其写为左乘和右乘的形式
+变换，写为四元数左乘矩阵和右乘矩阵的形式
 
 \begin{equation}
-({[q^{b_{k}}_{b_{k+1}}]}_L - {[q^{c_{k}}_{c_{k+1}}]}_R) q^b_c
-= Q^k_{k+1} q^b_c = 0
+({[\mathbf{q}^{b_{k}}_{b_{k+1}}]}_L - {[\mathbf{q}^{c_{k}}_{c_{k+1}}]}_R) \mathbf{q}^b_c
+= \mathbf{Q}^k_{k+1} \mathbf{q}^b_c = 0
 \end{equation}
 
-$[q]_L$ 与 $[q]_R$ 分别表示 \textbf{四元数左乘矩阵} 和 \textbf{四元数右乘矩阵}，其定义为（四元数实部在后）
+$[\mathbf{q}]_L$ 与 $[\mathbf{q}]_R$ 分别表示 \textbf{四元数左乘矩阵}和\textbf{四元数右乘矩阵}，其定义为（四元数实部在后）
 
 \begin{equation}
 \begin{aligned}
-[q]_L &=
+{[\mathbf{q}]}_L &=
+{\begin{bmatrix} \mathbf{q}_v \\ q_w \end{bmatrix}}_L =
 \begin{bmatrix}
-q_{w}I_{3}+[q_{xyz }]_{\times} & q_{xyz}\\
--q_{xyz} & q_{w}
+{q}_{w} \mathbf{I}_{3} + {\lfloor \mathbf{q}_{v}\rfloor}_{\times} & \mathbf{q}_{v}\\
+-\mathbf{q}_{v} & {q}_{w}
 \end{bmatrix} \\
-[q]_R &=
+{[\mathbf{q}]}_R &=
+{\begin{bmatrix} \mathbf{q}_v \\ q_w \end{bmatrix}}_R =
 \begin{bmatrix}
-q_{w}I_{3}-[q_{xyz }]_{\times} & q_{xyz}\\
--q_{xyz} & q_{w}
+{q}_{w} \mathbf{I}_{3} - {\lfloor \mathbf{q}_{v} \rfloor}_{\times} & \mathbf{q}_{v}\\
+-\mathbf{q}_{v} & {q}_{w}
 \end{bmatrix}
 \end{aligned}
 \end{equation}
@@ -513,36 +553,43 @@ q_{w}I_{3}-[q_{xyz }]_{\times} & q_{xyz}\\
 
 \begin{equation}
 \begin{bmatrix}
-w^{0}_{1}Q^{0}_{1}\\
-w^{1}_{2}Q^{1}_{2}\\
+w^{0}_{1} \mathbf{Q}^{0}_{1} \\
+w^{1}_{2} \mathbf{Q}^{1}_{2} \\
 \vdots \\
-w^{N-1}_{N}Q^{N-1}_{N}
-\end{bmatrix}q^{b}_{c}=Q_{N}q^{b}_{c}=0
+w^{N-1}_{N} \mathbf{Q}^{N-1}_{N}
+\end{bmatrix} 
+\mathbf{q}^{b}_{c}
+=
+\mathbf{Q}_{N} \mathbf{q}^{b}_{c} = \boldsymbol{0}
 \end{equation}
 
-其中 $w^{N-1}_{N}$ 为外点剔除权重，其与相对旋转求得的角度残差有关，$N$为计算相对旋转需要的测量对数，其由最终的终止条件决定。角度残差可以写为，
+其中 $w^{k-1}_{k}$ 为外点剔除权重（Huber鲁棒核函数）
 
 \begin{equation}
-{\theta}^{k}_{k+1}=
-arccos\bigg(
-  \frac{tr(\hat{R}^{b^{-1}}_{c}R^{b_{k}^{-1}}_{b_{k+1}}\hat{R}^{b}_{c}R^{c_{k}}_{c_{k+1}} )-1}{2}\bigg)
-\end{equation}
-
-从而权重为
-
-\begin{equation}
-w^{k}_{k+1}=
+w^{k}_{k+1}
+=
 \left\{\begin{matrix}
-1, & {\theta}^{k}_{k+1}<threshold  (\text{一般5°}) \\
-\frac{threshold}{\theta^{k}_{k+1}}, & otherwise
+1, & {\theta}^{k}_{k+1} < \text{threshold(5° as general)} \\
+\frac{\text{threshold}}{\theta^{k}_{k+1}}, & \text{otherwise}
 \end{matrix}\right.
 \end{equation}
 
-至此，就可以通过求解方程 $Q_N q_c^b=0$ 得到相对旋转，解为 $Q_N$ 的左奇异向量中最小奇异值对应的特征向量。
+其与相对旋转求得的角度残差有关，$N$为计算相对旋转需要的测量对数，其由最终的终止条件决定。根据$\text{tr}(\mathbf{R}) = 1+2 \cos \theta$，角度残差可以写为
 
-但是，在这里还要注意 求解的终止条件(校准完成的终止条件) 。在足够多的旋转运动中，我们可以很好的估计出相对旋转 $R_{c}^{b}$，这时 $Q_{N}$ 对应一个准确解，且其零空间的秩为1。但是在校准的过程中，某些轴向上可能存在退化运动(如匀速运动)，这时 $Q_{N}$ 的零空间的秩会大于1。判断条件就是 $Q_N$ 的第二小的奇异值是否大于某个阈值，若大于则其零空间的秩为1，反之秩大于1，相对旋转 $R_{c}^{b}$ 的精度不够，校准不成功。  
+\begin{equation}
+{\theta}^{k}_{k+1}
+=
+\arccos
+\bigg(
+  \frac{tr(\hat{\mathbf{R}}^{b^{-1}}_{c} \mathbf{R}^{b_{k}^{-1}}_{b_{k+1}} \hat{\mathbf{R}}^{b}_{c} \mathbf{R}^{c_{k}}_{c_{k+1}} )-1}{2}
+\bigg)
+\end{equation}
 
-对应代码在 `InitialEXRotation::CalibrationExRotation` 中。
+至此，就可以通过求解方程 $\mathbf{Q}_N \mathbf{q}_c^b = \boldsymbol{0}$ 得到相对旋转，解为 $\mathbf{Q}_N$ 的最小奇异值对应的左奇异向量。
+
+但是，在这里还要注意 求解的终止条件(校准完成的终止条件) 。在足够多的旋转运动中，我们可以很好的估计出相对旋转 $\mathbf{R}_{c}^{b}$，这时 $\mathbf{Q}_{N}$ 对应一个准确解，且其零空间的秩为1。但是在校准的过程中，某些轴向上可能存在退化运动(如匀速运动)，这时 $\mathbf{Q}_{N}$ 的零空间的秩会大于1。{\color{blue}判断条件就是 $\mathbf{Q}_N$ 的第二小的奇异值是否大于某个阈值，若大于则其零空间的秩为1，反之秩大于1，相对旋转 $\mathbf{R}_{c}^{b}$ 的精度不够，校准不成功。}  
+
+对应代码在 \verb|InitialEXRotation::CalibrationExRotation| 中。
 
 \begin{lstlisting}
 // 相机与IMU之间的相对旋转
@@ -603,85 +650,74 @@ if(var < 0.25) //! 以标准差判断可观性
 
 \subsection{相机初始化（Vision-Only SFM）}
 
-\begin{enumerate}
-\item 求取本质矩阵求解位姿（\verb|relativePose|）
-\item  三角化特征点（\verb|sfm.construct|）
-\item  PnP求解位姿（\verb|cv::solvePnP|）
-\item  转换到IMU坐标系下
-\item  $c_0$ 坐标系作为参考系
-\item  不断重复直到恢复出滑窗内的Features和相机位姿
-\end{enumerate}
+\begin{itemize}
+\item 根据本质矩阵求解位姿（\verb|relativePose|）
+\item 三角化特征点（\verb|sfm.construct|）
+\item PnP求解位姿（\verb|cv::solvePnP|）
+\item 转换到IMU坐标系下
+\item $c_0$ 坐标系作为参考系
+\item 不断重复直到恢复出滑窗内的Features和相机位姿
+\end{itemize}
 
 \subsection{视觉与IMU对齐}
 
-对应代码：\verb|VisualIMUAlignment|
-
 \begin{figure}[htbp]
-\centering
-\includegraphics[scale=0.6]{images/visual_inertial_alignment.png}
+  \centering
+  \includegraphics[scale=0.6]{images/visual_inertial_alignment.png}
 \end{figure}
 
-\begin{enumerate}
-\item Gyroscope Bias Calibration
+对应代码在\verb|VisualIMUAlignment|中，主要包括以下几个过程：
+\begin{itemize}
+\item Gyroscope Bias Calibration（加速度Bias相对$\mathbf{g}$非常小，不估计）
 \item Velocity, Gravity Vector and Metric Scale Initialization
 \item Gravity Refinement
 \item Completing Initialization
-\end{enumerate}
+\end{itemize}
 
 \subsubsection{陀螺仪Bias标定}
 
-标定陀螺仪Bias使用如下代价函数
+该过程认为相机 $\mathbf{q}^{c_k}_{c_{k+1}}$ 较准，为真实值。
+
+如果外参 $\mathbf{q}_{bc}$ 已经标定好，利用旋转约束，可估计陀螺仪Bias，构建最小二乘问题
 
 \begin{equation}
-\underset{\delta b_{w}}{min}\sum_{k\in B}^{ }\left \| q^{c_{0}^{-1}}_{b_{k+1}}\otimes q^{c_{0}}_{b_{k}}\otimes\gamma _{b_{k+1}}^{b_{k}} \right \|^{2}
-\end{equation}
-
-因为四元数最小值为单位四元数 $[1,0_{v}]^{T}$，所以令
-
-\begin{equation}
-q^{c_{0}^{-1}}_{b_{k+1}}\otimes q^{c_{0}}_{b_{k}}\otimes\gamma _{b_{k+1}}^{b_{k}} =
-\begin{bmatrix}
-1\\
-0
-\end{bmatrix}
+{\delta \mathbf{b}_g}^{*} =
+\arg \min_{\delta \mathbf{b}_g} \sum_{k\in B}
+\left \| 
+2 \left[
+\mathbf{q}^{c_{0}^{-1}}_{b_{k+1}} \otimes \mathbf{q}^{c_{0}}_{b_{k}}
+\otimes \boldsymbol{\gamma}_{b_{k+1}}^{b_{k}}
+\right]_{xyz} 
+\right \|^{2}
 \end{equation}
 
 其中
 
 \begin{equation}
-\gamma _{b_{k+1}}^{b_{k}}\approx \hat{\gamma}_{b_{k+1}}^{b_{k}}\otimes \begin{bmatrix}
-1\\
-\frac{1}{2}J^{\gamma }_{b_{w}}\delta b_{w}
+\boldsymbol{\gamma}_{b_{k+1}}^{b_{k}}
+\approx 
+\hat{\boldsymbol{\gamma}}_{b_{k+1}}^{b_{k}} \otimes 
+\begin{bmatrix}
+1 \\ \frac{1}{2} \mathbf{J}^{\boldsymbol{\gamma}}_{\mathbf{b}_{g}} \delta \mathbf{b}_{g}
 \end{bmatrix}
 \end{equation}
 
-所以
-
 \begin{equation}
-\hat{\gamma}_{b_{k+1}}^{b_{k}} \otimes
-\begin{bmatrix}
-1\\
-\frac{1}{2}J^{\gamma }_{b_{w}}\delta b_{w}
-\end{bmatrix}
-= q^{c_{0}^{-1}}_{b_{k}}\otimes q^{c_{0}}_{b_{k+1}}
+\mathbf{q}^{c_{0}^{-1}}_{b_{k+1}} \otimes \mathbf{q}^{c_{0}}_{b_{k}} = \mathbf{q}^{c_k}_{c_{k+1}}
 \end{equation}
 
-\begin{equation}
-\begin{bmatrix}
-1\\
-\frac{1}{2}J^{\gamma }_{b_{w}}\delta b_{w}
-\end{bmatrix}=\hat{\gamma}_{b_{k+1}}^{b_{k}^{-1}}\otimes q^{c_{0}^{-1}}_{b_{k}}\otimes q^{c_{0}}_{b_{k+1}}
-\end{equation}
-
-
-只取上式虚部，再进行最小二乘求解
+求取雅克比矩阵，构建正规方程$\mathbf{Hx} = \mathbf{b}$
 
 \begin{equation}
-J^{\gamma^{T}}_{b_{w}}J^{\gamma }_{b_{w}}\delta b_{w}=
-2 \cdot J^{\gamma^{T}}_{b_{w}}(\hat{\gamma}_{b_{k+1}}^{b_{k}^{-1}}\otimes q^{c_{0}^{-1}}_{b_{k}}\otimes q^{c_{0}}_{b_{k+1}})_{vec}
+\mathbf{J}^{\gamma^{T}}_{b_{w}} \mathbf{J}^{\gamma }_{b_{w}} \delta \mathbf{b}_{g}
+=
+2 \cdot \mathbf{J}^{\gamma^{T}}_{\mathbf{b}_g}
+\left[
+\hat{\boldsymbol{\gamma}}_{b_{k+1}}^{b_{k}^{-1}} \otimes \mathbf{q}^{c_{0}^{-1}}_{b_{k}} \otimes \mathbf{q}^{c_{0}}_{b_{k+1}}
+\right]_{xyz}
 \end{equation}
 
-求解上式的最小二乘解，即可得到 $\delta b_{w}$，注意这个地方得到的只是Bias的变化量，需要在滑窗内累加得到Bias的准确值。   
+根据上式，即可求解 $\delta \mathbf{b}_g$，注意这个地方得到的只是Bias的变化量，需要在滑窗内累加得到Bias的准确值。   
 
 对应代码：\verb|solveGyroscopeBias|
 
@@ -727,89 +763,109 @@ void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs)
 
 \subsubsection{初始化速度、重力向量和尺度因子}
 
-要估计的状态量
+该过程要估计的状态量
 
 \begin{equation}
-X_{I}=
-[v^{b_{0}}_{b_{0}}, v^{b_{0}}_{b_{1}}, \cdots, v^{b_{n}}_{b_{n}}, g^{c_{0}}, s]
+\mathcal{X}_{I}=
+\left[
+\mathbf{v}^{b_{0}}_{b_{0}}, \mathbf{v}^{b_{0}}_{b_{1}}, \cdots, \mathbf{v}^{b_{n}}_{b_{n}}, \mathbf{g}^{c_{0}}, s
+\right]
 \in \mathbb{R}^{3(n+1)+3+1}
 \end{equation}
 
-其中，$g^{c_{0}}$ 为在第 0 帧 Camera 相机坐标系下的重力向量。
+其中，$\mathbf{g}^{c_{0}}$ 为在第0帧Camera相机坐标系下的重力向量。
 
-根据IMU测量模型可知
+根据IMU预积分估计模型 \eqref{equ:preinte_estimate} 可知
 
 \begin{equation}
 \begin{aligned}
-\alpha^{b_{k}}_{b_{k+1}} &= R^{b_{k}}_{c_{0}}(s(\bar{p}^{c_{0}}_{b_{k+1}}-\bar{p}^{c_{0}}_{b_{k}}) +
-\frac{1}{2}g^{c_{0}}\Delta t_{k}^{2} -
-R^{c_0}_{b_k} v^{b_k}_{b_{k}} \Delta t_{k}) \\
-\beta ^{b_{k}}_{b_{k+1}} &=
-R^{b_{k}}_{c_{0}}(R^{c_0}_{b_{k+1}} v^{b_{k+1}}_{b_{k+1}} +
-g^{c_{0}}\Delta t_{k} -
-R^{c_0}_{b_k} v^{b_k}_{b_{k}})
+\boldsymbol{\alpha}^{b_{k}}_{b_{k+1}} 
+&= 
+\mathbf{R}^{b_{k}}_{c_{0}}
+\left(
+s(\bar{\mathbf{p}}^{c_{0}}_{b_{k+1}} - \bar{\mathbf{p}}^{c_{0}}_{b_{k}}) +
+\frac{1}{2}\mathbf{g}^{c_{0}} \Delta t_{k}^{2} -
+\mathbf{R}^{c_0}_{b_k} \mathbf{v}^{b_k}_{b_{k}} \Delta t_{k} 
+\right) 
+\\
+\boldsymbol{\beta}^{b_{k}}_{b_{k+1}} &=
+\mathbf{R}^{b_{k}}_{c_{0}}
+\left(
+\mathbf{R}^{c_0}_{b_{k+1}} \mathbf{v}^{b_{k+1}}_{b_{k+1}} +
+\mathbf{g}^{c_{0}}\Delta t_{k} - \mathbf{R}^{c_0}_{b_k} \mathbf{v}^{b_k}_{b_{k}}
+\right)
 \end{aligned}
 \end{equation}
 
-我们已经得到了IMU相对于相机的旋转 $q_{b}^{c}$，假设IMU到相机的平移量$p_{b}^{c}$，那么可以很容易地将相机坐标系下的位姿转换到IMU坐标系下
+我们已经得到了IMU相对于相机的旋转 $\mathbf{q}_{b}^{c}$，假设IMU到相机的平移量$\mathbf{p}_{b}^{c}$，那么可以很容易地将相机坐标系下的位姿转换到IMU坐标系下。
 
 \begin{equation}
 \begin{aligned}
-q_{b_{k}}^{c_{0}} &=
-q^{c_{0}}_{c_{k}}\otimes (q_{c}^{b})^{-1}  \\
-s\bar{p}^{c_{0}}_{b_{k}} &=
-s\bar{p}^{c_{0}}_{c_{k}} - R^{c_{0}}_{b_{k}}p_{c}^{b}
+\mathbf{q}_{b_{k}}^{c_{0}} &=
+\mathbf{q}^{c_{0}}_{c_{k}} \otimes (\mathbf{q}_{c}^{b})^{-1}  \\
+s \bar{\mathbf{p}}^{c_{0}}_{b_{k}} &=
+s \bar{\mathbf{p}}^{c_{0}}_{c_{k}} - \mathbf{R}^{c_{0}}_{b_{k}} \mathbf{p}_{c}^{b}
 \end{aligned}
 \end{equation}
 
-所以，定义相邻两帧之间的IMU预积分出的增量（${\hat{\alpha}}_{b_{k+1}}^{b_{k}}$，${\hat{\beta}}_{b_{k+1}}^{b_{k}}$）与预测值之间的残差，即
+所以，定义相邻两帧之间的IMU预积分测量值（${\hat{\boldsymbol{\alpha}}}_{b_{k+1}}^{b_{k}}$，${\hat{\boldsymbol{\beta}}}_{b_{k+1}}^{b_{k}}$）与预积分估计值之间的残差，即
 
 \begin{equation}
 \begin{aligned}
-r(\hat{z}^{b_{k}}_{b_{k+1}}, X_I) &=
+\mathbf{r}(\hat{\mathbf{z}}^{b_{k}}_{b_{k+1}}, \mathcal{X}_I) 
+&=
 \begin{bmatrix}
-\delta \alpha^{b_{k}}_{b_{k+1}} \\
-\delta \beta ^{b_{k}}_{b_{k+1}}
-\end{bmatrix} \\ &=
+\delta \boldsymbol{\alpha}^{b_{k}}_{b_{k+1}} \\
+\delta \boldsymbol{\beta}^{b_{k}}_{b_{k+1}}
+\end{bmatrix} \\ 
+&=
 \begin{bmatrix}
-\hat{\alpha}^{b_{k}}_{b_{k+1}} -& R^{b_{k}}_{c_{0}}(s(\bar{p}^{c_{0}}_{b_{k+1}}-\bar{p}^{c_{0}}_{b_{k}}) +
-\frac{1}{2}g^{c_{0}}\Delta t_{k}^{2} -
-R^{c_0}_{b_k} v^{b_k}_{b_{k}} \Delta t_{k})\\
-\hat{\beta}^{b_{k}}_{b_{k+1}} -&
-R^{b_{k}}_{c_{0}}(R^{c_0}_{b_{k+1}} v^{b_{k+1}}_{b_{k+1}} +
-g^{c_{0}}\Delta t_{k} -
-R^{c_0}_{b_k} v^{b_k}_{b_{k}})
+\hat{\boldsymbol{\alpha}}^{b_{k}}_{b_{k+1}} -& 
+\mathbf{R}^{b_{k}}_{c_{0}}
+\left(
+s(\bar{\mathbf{p}}^{c_{0}}_{b_{k+1}} - \bar{\mathbf{p}}^{c_{0}}_{b_{k}}) +
+\frac{1}{2}\mathbf{g}^{c_{0}} \Delta t_{k}^{2} -
+\mathbf{R}^{c_0}_{b_k} \mathbf{v}^{b_k}_{b_{k}} \Delta t_{k} 
+\right) \\
+\hat{\boldsymbol{\beta}}^{b_{k}}_{b_{k+1}} -&
+\mathbf{R}^{b_{k}}_{c_{0}}
+\left(
+\mathbf{R}^{c_0}_{b_{k+1}} \mathbf{v}^{b_{k+1}}_{b_{k+1}} +
+\mathbf{g}^{c_{0}}\Delta t_{k} - \mathbf{R}^{c_0}_{b_k} \mathbf{v}^{b_k}_{b_{k}}
+\right)
 \end{bmatrix}
 \end{aligned}
 \end{equation}
 
-令 $r(\hat{z}_{b_{k+1}}^{b_{k}}, X_I)=\mathbf{0}$，转换成 $Hx=b$ 的形式
+令 $\mathbf{r}(\hat{z}_{b_{k+1}}^{b_{k}}, \mathcal{X}_I)=\mathbf{0}$，转换成 $\mathbf{Hx}=\mathbf{b}$ 的形式
 
 \begin{equation}
+\label{equ:init_vgs}
 \begin{bmatrix}
--I\Delta t_{k} & 0 & \frac{1}{2}R^{b_{k}}_{c_{0}} \Delta t_{k}^{2} &
-R^{b_{k}}_{c_{0}}(\bar{p}^{c_{0}}_{c_{k+1}}-\bar{p}^{c_{0}}_{c_{k}}) \\
--I & R^{b_{k}}_{c_{0}} R^{c_0}_{b_{k+1}} & R^{b_{k}}_{c_{0}}\Delta t_{k} & 0
+-\mathbf{I} \Delta t_{k} & 0 & \frac{1}{2} \mathbf{R}^{b_{k}}_{c_{0}} \Delta t_{k}^{2} &
+\mathbf{R}^{b_{k}}_{c_{0}} (\bar{\mathbf{p}}^{c_{0}}_{c_{k+1}} - \bar{\mathbf{p}}^{c_{0}}_{c_{k}}) \\
+-\mathbf{I} & \mathbf{R}^{b_{k}}_{c_{0}} \mathbf{R}^{c_0}_{b_{k+1}} & \mathbf{R}^{b_{k}}_{c_{0}}\Delta t_{k} & 0
 \end{bmatrix}
 \begin{bmatrix}
-v^{b_{k}}_{b_{k}}\\
-v^{b_{k+1}}_{b_{k+1}}\\
-g^{c_{0}}\\
+\mathbf{v}^{b_{k}}_{b_{k}}\\
+\mathbf{v}^{b_{k+1}}_{b_{k+1}}\\
+\mathbf{g}^{c_{0}}\\
 s
-\end{bmatrix} =
+\end{bmatrix} 
+=
 \begin{bmatrix}
-\alpha^{b_{k}}_{b_{k+1}} - p_c^b + R^{b_{k}}_{c_{0}} R^{c_0}_{b_{k+1}} p_c^b \\
-\beta ^{b_{k}}_{b_{k+1}}
+\boldsymbol{\alpha}^{b_{k}}_{b_{k+1}} - \mathbf{p}_c^b + \mathbf{R}^{b_{k}}_{c_{0}} \mathbf{R}^{c_0}_{b_{k+1}} \mathbf{p}_c^b \\
+\boldsymbol{\beta}^{b_{k}}_{b_{k+1}}
 \end{bmatrix}
 \end{equation}
 
-通过Cholosky分解求解 $X_I$
+通过Cholosky分解求解 $\mathcal{X}_I$
 
 \begin{equation}
-H^T H X_I = H^T b
+\mathbf{H}^T \mathbf{H} \mathcal{X}_I = \mathbf{H}^T \mathbf{b}
 \end{equation}
 
-对应代码：`LinearAlignment`
+对应代码在 \verb|LinearAlignment|。
 
 \subsubsection{优化重力}
 
@@ -818,44 +874,87 @@ H^T H X_I = H^T b
 \includegraphics[scale=0.6]{images/gravity_tangent_space.png}
 \end{figure}
 
-重力矢量的模长固定（9.8），其为2个自由度，在切空间上对其参数化
+利用公式\eqref{equ:init_vgs}求解重力向量$\mathbf{g}^{c_0}$的过程中，并没有加入模长限制$\|\mathbf{g}^{c_0}\|=9.81$。三维变量$\mathbf{g}^{c_0}$实际只有2个自由度。
+
+重力矢量有2个自由度，在切空间上对其参数化：
 
 \begin{equation}
 \begin{aligned}
-\hat{g} &=
-\|g\| \cdot \bar{\hat{g}} + \omega_1 \vec{b_1} + \omega_2 \vec{b_2} \\ &=
-\|g\| \cdot \bar{\hat{g}} + B \vec{\omega}
+\hat{\mathbf{g}}^{c_0}
+&=
+\|\mathbf{g}\| \cdot \bar{\hat{\mathbf{g}}}^{c_0} + \omega_1 \vec{b_1} + \omega_2 \vec{b_2} \\ 
+&=
+\|\mathbf{g}\| \cdot \bar{\hat{\mathbf{g}}}^{c_0} + \mathbf{B} \vec{\omega}
 \end{aligned} , \quad
-B \in \mathbb{R}^{3 \times 2}, \vec{\omega} \in \mathbb{R}^{2 \times 1}
+\mathbf{B} 
+=
+\begin{bmatrix}
+\vec{b_1} & \vec{b_2}
+\end{bmatrix} 
+\in \mathbb{R}^{3 \times 2}, \vec{\omega} \in \mathbb{R}^{2 \times 1}
 \end{equation}
 
-令 $\hat{g} = g^{c_{0}}$，将其代入上一小节公式得
+其中，$\omega_1$、$\omega_2$为待优化变量，$\vec{b}_{1}$、$\vec{b}_{1}$分别为
 
 \begin{equation}
-\begin{bmatrix}
--I\Delta t_{k} & 0 & \frac{1}{2}R^{b_{k}}_{c_{0}} \Delta t_{k}^{2} B &
-R^{b_{k}}_{c_{0}}(\bar{p}^{c_{0}}_{c_{k+1}}-\bar{p}^{c_{0}}_{c_{k}}) \\
--I & R^{b_{k}}_{c_{0}} R^{c_0}_{b_{k+1}} & R^{b_{k}}_{c_{0}}\Delta t_{k} B & 0
-\end{bmatrix}
-\begin{bmatrix}
-v^{b_{k}}_{b_{k}}\\
-v^{b_{k+1}}_{b_{k+1}}\\
-\vec{\omega}\\
-s
-\end{bmatrix} =
-\begin{bmatrix}
-\alpha^{b_{k}}_{b_{k+1}} - p_c^b + R^{b_{k}}_{c_{0}} R^{c_0}_{b_{k+1}} p_c^b -
-\frac{1}{2}R^{b_{k}}_{c_{0}} \Delta t_{k}^{2} \|g\| \cdot \bar{\hat{g}}\\
-\beta ^{b_{k}}_{b_{k+1}} -
-R^{b_{k}}_{c_{0}}\Delta t_{k} \|g\| \cdot \bar{\hat{g}}
-\end{bmatrix}
+\begin{array}{l}{
+\vec{b}_{1} =
+\left\{\begin{array}{ll}
+{\left(\hat{\mathbf{g}}^{c_{0}} \times [1,0,0] \right),} & 
+{\hat{\mathbf{g}}^{c_{0}} \neq[1,0,0]^{\top}} \\ 
+{\left(\hat{\mathbf{g}}^{c_{0}} \times [0,0,1] \right),} & {\text{otherwise}}
+\end{array}\right.} 
+\\ 
+{\vec{b}_{2}=\hat{\overline{\mathbf{g}}}^{c_{0}} \times \vec{b}_{1}}
+\end{array}
 \end{equation}
 
-同样，通过Cholosky分解求得 $g^{c_{0}}$，即相机 $C_0$ 系下的重力向量。
+将$\mathbf{g}^{c_0}$代入上一小节公式\eqref{equ:init_vgs}得
 
-最后，通过将 $g^{c_{0}}$ 旋转至惯性坐标系（世界系）中的 z 轴方向[0,0,1]，可以计算第一帧相机系到惯性系的旋转矩阵 $q_{c_0}^w$，这样就可以将所有变量调整至惯性世界系（\textbf{水平坐标系}，z轴与重力方向对齐）中。
+\begin{equation}
+\begin{aligned}
+\begin{bmatrix}
+-\mathbf{I} \Delta t_{k} & 0 & \frac{1}{2} \mathbf{R}^{b_{k}}_{c_{0}} \Delta t_{k}^{2} \mathbf{B} &
+\mathbf{R}^{b_{k}}_{c_{0}} (\bar{\mathbf{p}}^{c_{0}}_{c_{k+1}} - \bar{\mathbf{p}}^{c_{0}}_{c_{k}}) \\
+-\mathbf{I} & \mathbf{R}^{b_{k}}_{c_{0}} \mathbf{R}^{c_0}_{b_{k+1}} & \mathbf{R}^{b_{k}}_{c_{0}}\Delta t_{k} \mathbf{B} & 0
+\end{bmatrix}
+\begin{bmatrix}
+\mathbf{v}^{b_{k}}_{b_{k}} \\
+\mathbf{v}^{b_{k+1}}_{b_{k+1}} \\
+\vec{\omega} \\
+s
+\end{bmatrix} 
+\\=
+\begin{bmatrix}
+\boldsymbol{\alpha}^{b_{k}}_{b_{k+1}} - \mathbf{p}_c^b + \mathbf{R}^{b_{k}}_{c_{0}} \mathbf{R}^{c_0}_{b_{k+1}} \mathbf{p}_c^b -
+\frac{1}{2} \mathbf{R}^{b_{k}}_{c_{0}} \Delta t_{k}^{2} \|\mathbf{g}\| \cdot \bar{\hat{\mathbf{g}}}\\
+\boldsymbol{\beta}^{b_{k}}_{b_{k+1}} -
+\mathbf{R}^{b_{k}}_{c_{0}} \Delta t_{k} \|\mathbf{g}\| \cdot \bar{\hat{\mathbf{g}}}
+\end{bmatrix}
+\end{aligned}
+\end{equation}
 
-对应代码：\verb|RefineGravity|
+同样，通过Cholosky分解求得 $\vec{\omega}$，得到 相机$C_0$系下的重力向量$\hat{\mathbf{g}}^{c_0}$。
+
+对应代码在\verb|RefineGravity|中。
+
+\subsubsection{将相机坐标系对齐到世界坐标系}
+
+通过将 $\mathbf{g}^{c_{0}}$ 旋转至惯性坐标系（世界系）中的 z 轴方向[0,0,1]，可以计算第一帧相机系到惯性系的旋转矩阵 $\mathbf{q}_{c_0}^w$，这样就可以将所有变量调整至惯性世界系（\textbf{水平坐标系}，z轴与重力方向对齐）中。
+
+找到$c_0$到$w$系的旋转矩阵$\mathbf{R}_{w c_{0}}=\exp ([\theta \mathbf{u}])$
+
+\begin{equation}
+\mathbf{u}
+=
+\frac{\hat{\mathbf{g}}^{c_{0}} \times \hat{\mathbf{g}}^{w}}{\left\|\hat{\mathbf{g}}^{c_{0}} \times \hat{\mathbf{g}}^{w}\right\|}, \quad 
+\theta
+=
+\operatorname{atan} 2\left(\left\|\hat{\mathbf{g}}^{c_{0}} \times \hat{\mathbf{g}}^{w}\right\|, \hat{\mathbf{g}}^{c_{0}} \cdot \hat{\mathbf{g}}^{w}\right)
+\end{equation}
+
+把所有$c_0$坐标系下的变量旋转到$w$下，把相机平移和特征点尺度恢复到米制单位，完成了系统初始化过程。
+
 
 \section{后端优化(紧耦合)}
 
@@ -870,37 +969,71 @@ VIO 紧耦合方案的主要思路就是通过将基于视觉构造的残差项�
 
 \begin{equation}
 \begin{aligned}
-X &= [x_{0},x_{1},\cdots ,x_{n},x^{b}_{c},{\lambda}_{0},{\lambda}_{1}, \cdots ,{\lambda}_{m}]  \\
-x_{k} &= [p^{w}_{b_{k}},v^{w}_{b_{k}},q^{w}_{b_{k}},b_{a},b_{g}],\quad k\in[0,n] \\
-x^{b}_{c} &= [p^{b}_{c},q^{b}_{c}]
+\mathcal{X} 
+&= 
+\left[
+\mathbf{x}_{0},\mathbf{x}_{1},\cdots,\mathbf{x}_{n},\mathbf{x}^{b}_{c},{\lambda}_{0},{\lambda}_{1}, \cdots ,{\lambda}_{m}
+\right]  
+\\
+\mathbf{x}_{k} 
+&= 
+\left[
+\mathbf{p}^{w}_{b_{k}},\mathbf{v}^{w}_{b_{k}},\mathbf{q}^{w}_{b_{k}},\mathbf{b}_{a},\mathbf{b}_{g}
+\right], \quad k \in [0,n] 
+\\
+\mathbf{x}^{b}_{c} &= \left[ \mathbf{p}^{b}_{c}, \mathbf{q}^{b}_{c} \right]
 \end{aligned}
 \end{equation}
 
-\begin{enumerate}
+\begin{itemize}
 \item 滑动窗口内 n+1 个所有相机的状态(包括位置、朝向、速度、加速度计 bias 和陀螺仪 bias)
 \item Camera 到 IMU 的外参
 \item m+1 个 3D 点的逆深度
-\end{enumerate}
+\end{itemize}
 
 优化过程中的 \textbf{误差状态量}
 
 \begin{equation}
 \begin{aligned}
-\delta X&=[\delta x_{0},\delta x_{1},\cdots ,\delta x_{n},\delta x^{b}_{c},\lambda_{0},\delta \lambda _{1}, \cdots , \delta \lambda_{m}]  \\
-\delta x_{k}&=[\delta p^{w}_{b_{k}},\delta v^{w}_{b_{k}},\delta \theta ^{w}_{b_{k}},\delta b_{a},\delta b_{g}],\quad k\in[0,n] \\
-\delta x^{b}_{c}&= [\delta p^{b}_{c},\delta q^{b}_{c}]
+\delta \mathcal{X}
+&=
+\left[
+\delta \mathbf{x}_{0}, \delta \mathbf{x}_{1}, \cdots, \delta \mathbf{x}_{n}, \delta \mathbf{x}^{b}_{c}, \lambda_{0}, \delta \lambda_{1}, \cdots, \delta \lambda_{m}
+\right] 
+\\
+\delta \mathbf{x}_{k}
+&=
+\left[
+\delta \mathbf{p}^{w}_{b_{k}}, \delta \mathbf{v}^{w}_{b_{k}}, \delta \boldsymbol{\theta}^{w}_{b_{k}}, \delta \mathbf{b}_{a}, \delta \mathbf{b}_{g}
+\right], \quad k \in [0,n] \\
+\delta \mathbf{x}^{b}_{c} &= \left[ \delta \mathbf{p}^{b}_{c}, \delta \mathbf{q}^{b}_{c} \right] 
 \end{aligned}
 \end{equation}
 
 进而得到系统优化的代价函数（Minimize residuals from all sensors）
 
 \begin{equation}
-\min _{\mathcal{X}}
-\left\{\left\|\mathbf{r}_{p}-\mathbf{H}_{p} \mathcal{X}\right\|^{2}+\sum_{k \in \mathcal{B}}\left\|\mathbf{r}_{\mathcal{B}}\left(\hat{\mathbf{z}}_{b_{k+1}}^{b_{k}}, \mathcal{X}\right)\right\|_{\mathbf{P}_{b_{k}+1}^{2}}^{2}+\sum_{(l, j) \in \mathcal{C}} \rho\left(\left\|\mathbf{r}_{\mathcal{C}}\left(\hat{\mathbf{z}}_{l}^{c_{j}}, \mathcal{X}\right)\right\|_{\mathbf{P}_{l}^{c_{j}}}^{2}
-\right)\right\}
+\min_{\mathcal{X}}
+\left\{
+\underbrace{
+\left\|\mathbf{r}_{p}-\mathbf{H}_{p} \mathcal{X}\right\|^{2}
+}_\text{边缘化先验}
++
+\underbrace{
+\sum_{k \in \mathcal{B}}\left\|\mathbf{r}_{\mathcal{B}}\left(\hat{\mathbf{z}}_{b_{k+1}}^{b_{k}}, \mathcal{X}\right)\right\|_{\mathbf{P}_{b_{k}+1}^{2}}^{2}
+}_\text{IMU残差}
++
+\underbrace{
+\sum_{(l, j) \in \mathcal{C}} \rho\left(\left\|\mathbf{r}_{\mathcal{C}}\left(\hat{\mathbf{z}}_{l}^{c_{j}}, \mathcal{X}\right)\right\|_{\mathbf{P}_{l}^{c_{j}}}^{2}\right)
+}_\text{视觉残差}
+\right\}
 \end{equation}
 
-其中三个残差项依次是边缘化的先验信息、IMU测量残差、视觉的观测残差，都是用 \textbf{马氏距离}（与量纲无关）来表示的。
+其中，
+\begin{itemize}
+\item 三个残差都是用 \textbf{马氏距离}（与量纲无关）来表示的
+\item 鲁邦核函数 $\rho(\cdot)$ 仅处理视觉outlier
+\end{itemize}
 
 \textbf{Motion-only visual-inertial bundle adjustment}: Optimize \textbf{position, velocity, rotation} in a smaller windows, assuming all other quantities are fixed
 
@@ -992,25 +1125,26 @@ Eigen::Matrix<double, 15, 15> sqrt_info =
 residual = sqrt_info * residual; 
 \end{lstlisting}
 
-这里残差 \verb|residual| 乘以 \verb|sqrt_info|，是因为真正的优化项其实是 Mahalanobis 距离
+这里残差 \verb|residual| 乘以 \verb|sqrt_info|，是因为真正的优化项其实是 Mahalanobis 距离 或 马氏范数
 
 \begin{equation}
-d = \mathbf{r}^T \mathbf{P}^{-1} \mathbf{r}
+\|\mathbf{r}\|^2_{\boldsymbol{\Sigma}} = \mathbf{r}^T \boldsymbol{\Sigma}^{-1} \mathbf{r}
 \end{equation}
 
 Mahalanobis距离 其实相当于一个残差加权，协方差大的加权小，协方差小的加权大，着重优化那些比较确定的残差。  
 
-因为 ceres 只接受最小二乘优化，也就是 $\min e^T e$，所以把 $P^{-1}$ 做 LLT分解
+Ceres-Solver只接受最小二乘优化，即 $\min \|\mathbf{r}\|^2$，通过Cholesky分解，\textbf{将马氏范数转化为二范数}
 
 \begin{equation}
-\mathbf{L} \mathbf{L}^T = \mathbf{P}^{−1}
-\end{equation}
-
-则 
-
-\begin{equation}
-d = \mathbf{r}^T (\mathbf{L} \mathbf{L}^T) \mathbf{r} = 
+\|\mathbf{r}\|^2_{\boldsymbol{\Sigma}} 
+= 
+\mathbf{r}^T \boldsymbol{\Sigma}^{-1} \mathbf{r}
+=
+\mathbf{r}^T (\mathbf{L} \mathbf{L}^T) \mathbf{r}
+=
 (\mathbf{L}^T \mathbf{r})^T (\mathbf{L}^T \mathbf{r})
+=
+\|\mathbf{L}^T \mathbf{r}\|^2
 \end{equation}
 
 令 $\mathbf{r'} = (\mathbf{L}^T \mathbf{r})$ 作为新的优化误差，所以 
@@ -1455,24 +1589,25 @@ reduce = sqrt_info * reduce;
 
 \subsection{Temporal Calibration}
 
-根据 港科大沈老师PPT \cite{shen2018vinsslide}，可以知道：
+根据 港科大沈老师Slide \cite{shen2018vinsslide}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[scale=0.4]{images/time_synchronization.png}
+\caption{Time Synchronization}
+\label{fig:time_synchronization}
+\end{figure}
 
 \begin{enumerate}
 
+\item Timestamps and Time Synchronization，如图 \ref{fig:time_synchronization}
 
-\item Timestamps
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[scale=0.6]{images/timestamps.png}
-\end{figure}
-
-\item Time Synchronization
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[scale=0.6]{images/time_synchronization.png}
-\end{figure}
+\begin{itemize}
+  \item Timestamp: how the time for each sensor measurement is tagged
+  \item Best: timestamping is done at data capture
+  \item OK: fixed latency for time stamping
+  \item Bad: variable latency in time stamping
+\end{itemize}
 
 \item Temporal Calibration
 

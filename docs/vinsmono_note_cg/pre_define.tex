@@ -2,10 +2,12 @@
 \usepackage{amsmath,amsthm,amssymb}
 \usepackage[colorlinks,linkcolor=blue]{hyperref}
 \usepackage{graphicx}
+\usepackage{tikz}
 \usepackage{xcolor}
 \usepackage{float}
 \usepackage{makeidx}
 \usepackage{listings} 
+\usepackage[]{caption2}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage[level]{datetime}
 \usepackage{indentfirst}
@@ -19,6 +21,8 @@
 \renewcommand{\today}{\number\year 年 \number\month 月 \number\day 日}
 \renewcommand{\refname}{参考文献}
 \renewcommand{\tablename}{表}
+\renewcommand{\figurename}{图}
+\renewcommand{\captionlabeldelim}{}
 \renewcommand{\contentsname}{目录}
 
 \newcommand{\upcite}[1]{\textsuperscript{\textsuperscript{\cite{#1}}}}
