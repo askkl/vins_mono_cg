@@ -20,6 +20,33 @@
  * 即，A·bw=b，将多个帧综合起来为
  *            sum(A)bw = sum(b)                              (5)
  */
+
+/*
+ *  all_image_frame的构成 Estimator.cpp
+ *  Estimator::processIMU (对imu)
+    110    tmp_pre_integration->push_back(dt, linear_acceleration, angular_velocity);
+ *  Estimator::processImage (对image)
+    152    // 分别将读到的features和imu_mea加入到各自的序列当中
+    153    ImageFrame imageframe(image, header.stamp.toSec());
+    154    imageframe.pre_integration = tmp_pre_integration;
+    155    all_image_frame.insert(make_pair(header.stamp.toSec(), imageframe));
+ *  Estimator::initialStructure (对image)
+    314     // solve pnp for all frame
+    315     map<int, Vector3d>::iterator it;
+    316     map<double, ImageFrame>::iterator frame_it = all_image_frame.begin( );
+    317     for (int i = 0; frame_it != all_image_frame.end( ); frame_it++)
+    318     {
+    319         // provide initial guess
+    320         if((frame_it->first) == Headers[i].stamp.toSec())
+    321         {
+    322             frame_it->second.is_key_frame = true;
+    323             frame_it->second.R = Q[i].toRotationMatrix() * RIC[0].transpose();
+    324             frame_it->second.T = T[i];
+    325             i++;
+    326             continue;
+    327         } ...
+
+ */
 void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs) {
     Matrix3d A;
     Vector3d b;
